@@ -53,8 +53,8 @@ module Omnibus
       # TODO: We need a configurable option that allows a build to be marked as
       # a release build and thus leave the build denotation (ie `+` and
       # everything after) bit off.
-      build_tag << "+" << build_start_time.strftime("%Y%m%d%H%M%S")
       unless commits_since_tag == 0
+        build_tag << "+" << build_start_time.strftime("%Y%m%d%H%M%S")
         build_tag << "." << ["git", commits_since_tag, git_sha_tag].join(".")
       end
       build_tag
