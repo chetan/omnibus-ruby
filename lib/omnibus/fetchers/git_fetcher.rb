@@ -145,9 +145,23 @@ E
       rev =~ /^[0-9a-f]{40}$/
     end
 
+    # Retrieve the last tag which contains a version number pattern
+    def get_last_tag
+      cmd = "git tag --list | egrep '^[0-9]+\.[0-9]+' | tail -n 1"
+      shell = Mixlib::ShellOut.new(cmd, :live_stream => STDOUT, :cwd => project_dir)
+      shell.run_command
+      shell.error!
+      return shell.stdout.strip
+    end
+
     # Return the SHA corresponding to ref. If ref is an annotated tag,
     # return the SHA that was tagged not the SHA of the tag itself.
     def revision_from_remote_reference(ref)
+
+      if ref == "LAST_TAG" then
+        ref = get_last_tag()
+      end
+
       retries ||= 0
       # execute `git ls-remote` the trailing '*' does globbing. This
       # allows us to return the SHA of the tagged commit for annotated
