@@ -153,7 +153,7 @@ module Omnibus
     end
 
     def version_composition
-      version_regexp = /^(\d+)\.(\d+)(\.(\d+))?/
+      version_regexp = /^v?(\d+)\.(\d+)(\.(\d+))?/
       matches = version_regexp.match(git_describe)
       ver = matches[1..2]
       ver << (matches[4].nil?() ? 0 : matches[4])
