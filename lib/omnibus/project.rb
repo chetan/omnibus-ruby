@@ -163,7 +163,7 @@ module Omnibus
       # about some expected warnings...
       [msi_command.join(" "), {:returns => [0, 204]}]
     end
-    
+
     def fpm_command(pkg_type)
       command_and_opts = ["fpm",
                           "-s dir",
@@ -172,9 +172,9 @@ module Omnibus
                           "-n #{package_name}",
                           "--iteration #{iteration}",
                           install_path,
-                          "-m 'Opscode, Inc.'",
+                          "-m 'Pixelcop Research, Inc.'",
                           "--description 'The full stack of #{@name}'",
-                          "--url http://www.opscode.com"]
+                          "--url http://pixelcop.net"]
       if File.exist?("#{package_scripts_path}/postinst")
         command_and_opts << "--post-install '#{package_scripts_path}/postinst'"
       end
@@ -246,14 +246,14 @@ module Omnibus
                   :timeout => 3600,
                   :cwd => config.package_dir
                 }
-                
+
                 if cmd.is_a?(Array)
                   command = cmd[0]
                   cmd_options.merge!(cmd[1])
                 else
                   command = cmd
                 end
-                
+
                 shell = Mixlib::ShellOut.new(command, cmd_options)
                 shell.run_command
                 shell.error!
