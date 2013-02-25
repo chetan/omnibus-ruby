@@ -147,7 +147,7 @@ E
 
     # Retrieve the last tag which contains a version number pattern
     def get_last_tag
-      cmd = "git tag -l | egrep '^v?[0-9]+\.[0-9]+' | tail -n 1"
+      cmd = %q(git for-each-ref --sort=-taggerdate | awk '{print $3}' | ruby -ne 'puts $_.split("/").last' | egrep '^v?[0-9]+\.[0-9]+' | head -n 1)
       shell = Mixlib::ShellOut.new(cmd, :live_stream => STDOUT, :cwd => project_dir)
       shell.run_command
       shell.error!
