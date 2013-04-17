@@ -171,10 +171,9 @@ module Omnibus
                           "-v #{build_version}",
                           "-n #{package_name}",
                           "--iteration #{iteration}",
-                          install_path,
                           "-m 'Pixelcop Research, Inc.'",
-                          "--description 'The full stack of #{@name}'",
-                          "--url http://pixelcop.net"]
+                          "--description '#{@name}'",
+                          "--url https://bixby.io"]
       if File.exist?("#{package_scripts_path}/postinst")
         command_and_opts << "--after-install '#{package_scripts_path}/postinst'"
       end
@@ -196,6 +195,7 @@ module Omnibus
       end
 
       command_and_opts << " --replaces #{@replaces}" if @replaces
+      command_and_opts << install_path
       command_and_opts
     end
 
