@@ -176,15 +176,15 @@ module Omnibus
                           "--description 'The full stack of #{@name}'",
                           "--url http://pixelcop.net"]
       if File.exist?("#{package_scripts_path}/postinst")
-        command_and_opts << "--post-install '#{package_scripts_path}/postinst'"
+        command_and_opts << "--after-install '#{package_scripts_path}/postinst'"
       end
       # solaris packages don't support --pre-uninstall
       if File.exist?("#{package_scripts_path}/prerm") && pkg_type != "solaris"
-        command_and_opts << "--pre-uninstall '#{package_scripts_path}/prerm'"
+        command_and_opts << "--before-remove '#{package_scripts_path}/prerm'"
       end
       # solaris packages don't support --post-uninstall
       if File.exist?("#{package_scripts_path}/postrm") && pkg_type != "solaris"
-        command_and_opts << "--post-uninstall '#{package_scripts_path}/postrm'"
+        command_and_opts << "--after-remove '#{package_scripts_path}/postrm'"
       end
 
       @exclusions.each do |pattern|
