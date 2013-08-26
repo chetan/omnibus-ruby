@@ -28,7 +28,11 @@ describe Omnibus::BuildVersion do
 
   before :each do
     ENV['BUILD_ID'] = nil
-    Omnibus::BuildVersion.any_instance.stub(:git_describe).and_return(git_describe)
+    ENV['OMNIBUS_APPEND_TIMESTAMP'] = nil
+    Omnibus::BuildVersion.any_instance.stub(:shellout)
+                         .and_return(mock("ouput",
+                                          :stdout => git_describe,
+                                          :exitstatus => 0))
   end
 
   describe "git describe parsing" do
@@ -151,6 +155,60 @@ describe Omnibus::BuildVersion do
         build_version.semver.should =~ /11.0.0-alpha2\+#{today_string}[0-9]+/
       end
     end
+
+    describe "appending a timestamp" do
+      let(:git_describe){ "11.0.0-alpha-3-207-g694b062" }
+
+      it "appends a timestamp by default" do
+        build_version.semver.should =~ /11.0.0-alpha.3\+#{today_string}[0-9]+.git.207.694b062/
+      end
+
+      describe "ENV['OMNIBUS_APPEND_TIMESTAMP'] is set" do
+        ["true","t","yes","y",1].each do |truthy|
+          context "to #{truthy}" do
+            before { ENV['OMNIBUS_APPEND_TIMESTAMP'] = truthy.to_s }
+            it "appends a timestamp" do
+              build_version.semver.should =~ /11.0.0-alpha.3\+#{today_string}[0-9]+.git.207.694b062/
+            end
+          end
+        end
+
+        ["false","f","no","n",0].each do |falsey|
+          context "to #{falsey}" do
+            before { ENV['OMNIBUS_APPEND_TIMESTAMP'] = falsey.to_s }
+            it "does not append a timestamp" do
+              build_version.semver.should =~ /11.0.0-alpha.3\+git.207.694b062/
+            end
+          end
+        end
+      end
+
+      describe "Omnibus::Config.append_timestamp is set" do
+        context "is true" do
+          before { Omnibus::Config.append_timestamp(true) }
+          it "appends a timestamp" do
+            build_version.semver.should =~ /11.0.0-alpha.3\+#{today_string}[0-9]+.git.207.694b062/
+          end
+        end
+
+        context "is false" do
+          before { Omnibus::Config.append_timestamp(false) }
+          it "does not append a timestamp" do
+            build_version.semver.should =~ /11.0.0-alpha.3\+git.207.694b062/
+          end
+        end
+      end
+
+      describe "both are set" do
+        before do
+          ENV['OMNIBUS_APPEND_TIMESTAMP'] = "false"
+          Omnibus::Config.append_timestamp(true)
+        end
+        it "prefers the value from ENV['OMNIBUS_APPEND_TIMESTAMP']" do
+          build_version.semver.should =~ /11.0.0-alpha.3\+git.207.694b062/
+        end
+      end
+    end
   end
 
   describe "git describe output" do
@@ -171,6 +229,38 @@ describe Omnibus::BuildVersion do
     it "outputs a deprecation message" do
       Omnibus::BuildVersion.should_receive(:puts).with(/is deprecated/)
       Omnibus::BuildVersion.full
+    end
+  end
+
+  describe "`git describe` command failure" do
+    before do
+      stderr =<<-STDERR
+fatal: No tags can describe '809ea1afcce67e1148c1bf0822d40a7ef12c380e'.
+Try --always, or create some tags.
+      STDERR
+      build_version.stub(:shellout)
+                   .and_return(mock("ouput",
+                                    :stderr => stderr,
+                                    :exitstatus => 128))
+    end
+    it "sets the version to 0.0.0" do
+      build_version.git_describe.should eq("0.0.0")
+    end
+  end
+
+  describe "#initialize `path` parameter" do
+    let(:path) { "/some/fake/path" }
+    subject(:build_version){ Omnibus::BuildVersion.new(path) }
+
+    it "runs `git describe` at an alternate path" do
+      build_version.should_receive(:shellout)
+                   .with("git describe",
+                         {:live_stream => nil,
+                         :cwd => path})
+                    .and_return(mock("ouput",
+                                :stdout => git_describe,
+                                :exitstatus => 0))
+      build_version.git_describe
     end
   end
 end

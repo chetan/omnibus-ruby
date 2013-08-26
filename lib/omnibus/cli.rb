@@ -15,6 +15,21 @@
 # limitations under the License.
 #
 
+require 'omnibus/cli/application'
+require 'omnibus/cli/base'
+require 'omnibus/cli/build'
+
 module Omnibus
-  VERSION = "1.2.0"
+  module CLI
+
+    class Error < StandardError
+      attr_reader :original
+
+      def initialize(msg, original=nil)
+        super(msg)
+        @original = original
+      end
+    end
+
+  end
 end

@@ -1,0 +1,9 @@
+*.gem
+tmp
+
+# Bundler related
+Gemfile.lock
+.bundle/
+vendor/
+.yardoc
+doc/
