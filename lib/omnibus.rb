@@ -35,6 +35,8 @@ require 'omnibus/build_version'
 require 'omnibus/overrides'
 require 'omnibus/version'
 
+require 'omnibus/bixby' # load custom bixby patches/addons
+
 require 'pathname'
 
 module Omnibus
