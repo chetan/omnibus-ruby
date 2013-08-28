@@ -177,9 +177,9 @@ module Omnibus
     # @return [nil] if no pre-release tag was found
     def prerelease_tag
       prerelease_regex = if commits_since_tag > 0
-                           /^\d+\.\d+\.\d+(?:-|\.)([0-9A-Za-z.-]+)-\d+-g[0-9a-f]+$/
+                           /^v?\d+\.\d+\.\d+(?:-|\.)([0-9A-Za-z.-]+)-\d+-g[0-9a-f]+$/
                          else
-                           /^\d+\.\d+\.\d+(?:-|\.)([0-9A-Za-z.-]+)$/
+                           /^v?\d+\.\d+\.\d+(?:-|\.)([0-9A-Za-z.-]+)$/
                          end
       match = prerelease_regex.match(git_describe)
       match ? match[1] : nil
