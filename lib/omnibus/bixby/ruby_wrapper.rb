@@ -4,7 +4,8 @@ module Bixby
   # Ruby bin wrapper to disable RVM env
   def self.ruby_wrapper(cmd, install_dir)
 
-    File.open("#{install_dir}/bin/#{cmd}", 'w') do |f|
+    script = "#{install_dir}/bin/#{cmd}"
+    File.open(script, 'w') do |f|
 
       f.puts <<-EOF
 #!/usr/bin/env bash
@@ -16,6 +17,9 @@ unset GEM_HOME GEM_PATH
 EOF
 
     end
+
+    File.chmod(0755, script)
+
   end # ruby_wrapper
 
 end
