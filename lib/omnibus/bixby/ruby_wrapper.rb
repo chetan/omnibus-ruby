@@ -11,7 +11,7 @@ module Bixby
 #!/usr/bin/env bash
 
 unset GEM_HOME GEM_PATH
-# unset MY_RUBY_HOME RUBY_VERSION
+unset MY_RUBY_HOME RUBY_VERSION
 
 #{install_dir}/embedded/bin/#{cmd} $*
 EOF
