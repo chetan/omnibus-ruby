@@ -1,7 +1,10 @@
 
 module Bixby
 
-  # Ruby bin wrapper to disable RVM env
+  # Create ruby bin wrapper to disable RVM env
+  #
+  # Workaround for the following issue:
+  # https://tickets.opscode.com/browse/CHEF-3581
   def self.ruby_wrapper(cmd, install_dir)
 
     script = "#{install_dir}/bin/#{cmd}"
