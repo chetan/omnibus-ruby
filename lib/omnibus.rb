@@ -158,6 +158,8 @@ module Omnibus
     gem_list = File.join(project_root, "software_gems")
     if File.exists? gem_list then
       File.read(gem_list).each_line do |lib|
+        lib.strip!
+        next if lib.empty?
         begin
           spec = Gem::Specification.find_all_by_name(lib).first
           path = File.join(Pathname.new(spec.gem_dir), 'config', 'software')
