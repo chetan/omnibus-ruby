@@ -152,7 +152,30 @@ module Omnibus
   #
   # @return [Array<String>]
   def self.software_files
-    ruby_files(File.join(project_root, Config.software_dir))
+    paths = []
+
+    # load extra list of software
+    gem_list = File.join(project_root, "software_gems")
+    if File.exists? gem_list then
+      File.read(gem_list).each_line |lib|
+        begin
+          spec = Gem::Specification.find_all_by_name(lib).first
+          path = File.join(Pathname.new(spec.gem_dir), 'config', 'software')
+          paths << path
+          Omnibus.software_dirs << path
+        rescue Exception
+          raise "Unable to load software gem #{lib}"
+        end
+      end
+    end
+
+    # always include project dir last
+    paths << File.join(project_root, Config.software_dir)
+
+    # return all files
+    files = []
+    paths.each{ |p| files += ruby_files(p) }
+    return files
   end
 
   # Return directories to search for {Omnibus::Software} DSL files.
