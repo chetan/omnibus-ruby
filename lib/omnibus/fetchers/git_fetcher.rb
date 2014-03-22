@@ -1,5 +1,5 @@
 #
-# Copyright:: Copyright (c) 2012 Opscode, Inc.
+# Copyright:: Copyright (c) 2012-2014 Chef Software, Inc.
 # License:: Apache License, Version 2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,11 +15,11 @@
 # limitations under the License.
 #
 
-module Omnibus
+require 'omnibus/exceptions'
 
+module Omnibus
   # Fetcher implementation for projects in git.
   class GitFetcher < Fetcher
-
     name :git
 
     attr_reader :source
@@ -34,7 +34,7 @@ module Omnibus
     end
 
     def description
-      s=<<-E
+      <<-E
 repo URI:       #{@source[:git]}
 local location: #{@project_dir}
 E
@@ -47,9 +47,9 @@ E
 
     def clean
       if existing_git_clone?
-        log "cleaning existing build"
-        clean_cmd = "git clean -fdx"
-        shell = Mixlib::ShellOut.new(clean_cmd, :live_stream => STDOUT, :cwd => project_dir)
+        log 'cleaning existing build'
+        clean_cmd = 'git clean -fdx'
+        shell = Mixlib::ShellOut.new(clean_cmd, live_stream: STDOUT, cwd: project_dir)
         shell.run_command
         shell.error!
       end
@@ -76,7 +76,7 @@ E
         raise
       else
         # Deal with github failing all the time :(
-        time_to_sleep = 5 * (2 ** retries)
+        time_to_sleep = 5 * (2**retries)
         retries += 1
         log "git clone/fetch failed for #{@source} #{retries} time(s), retrying in #{time_to_sleep}s"
         sleep(time_to_sleep)
@@ -87,9 +87,9 @@ E
     private
 
     def clone
-      puts "cloning the source from git"
+      puts 'cloning the source from git'
       clone_cmd = "git clone #{@source[:git]} #{project_dir}"
-      shell = Mixlib::ShellOut.new(clone_cmd, :live_stream => STDOUT)
+      shell = Mixlib::ShellOut.new(clone_cmd, live_stream: STDOUT)
       shell.run_command
       shell.error!
     end
@@ -98,7 +98,7 @@ E
       sha_ref = target_revision
 
       checkout_cmd = "git checkout #{sha_ref}"
-      shell = Mixlib::ShellOut.new(checkout_cmd, :live_stream => STDOUT, :cwd => project_dir)
+      shell = Mixlib::ShellOut.new(checkout_cmd, live_stream: STDOUT, cwd: project_dir)
       shell.run_command
       shell.error!
     end
@@ -106,7 +106,7 @@ E
     def fetch_updates
       puts "fetching updates and resetting to revision #{target_revision}"
       fetch_cmd = "git fetch origin && git fetch origin --tags && git reset --hard #{target_revision}"
-      shell = Mixlib::ShellOut.new(fetch_cmd, :live_stream => STDOUT, :cwd => project_dir)
+      shell = Mixlib::ShellOut.new(fetch_cmd, live_stream: STDOUT, cwd: project_dir)
       shell.run_command
       shell.error!
     end
@@ -121,8 +121,8 @@ E
 
     def current_revision
       @current_rev ||= begin
-                         rev_cmd = "git rev-parse HEAD"
-                         shell = Mixlib::ShellOut.new(rev_cmd, :live_stream => STDOUT, :cwd => project_dir)
+                         rev_cmd = 'git rev-parse HEAD'
+                         shell = Mixlib::ShellOut.new(rev_cmd, live_stream: STDOUT, cwd: project_dir)
                          shell.run_command
                          shell.error!
                          output = shell.stdout
@@ -172,21 +172,30 @@ E
       # tags. We take care to only return exact matches in
       # process_remote_list.
       cmd = "git ls-remote origin #{ref}*"
-      shell = Mixlib::ShellOut.new(cmd, :live_stream => STDOUT, :cwd => project_dir)
+      shell = Mixlib::ShellOut.new(cmd, live_stream: STDOUT, cwd: project_dir)
       shell.run_command
       shell.error!
       commit_ref = process_remote_list(shell.stdout, ref)
-      if !commit_ref
-        raise "Could not parse SHA reference"
+
+      unless commit_ref
+        fail UnresolvableGitReference.new("Could not resolve `#{ref}' to a SHA.")
       end
       commit_ref
+    rescue UnresolvableGitReference => e # skip retries
+      ErrorReporter.new(e, self).explain(<<-E)
+Command `#{cmd}' did not find a commit for reference `#{ref}'.
+The tag or branch you're looking for doesn't exist on the remote repo.
+If your project uses version tags like v1.2.3, include the 'v' in your
+software's version.
+E
+      raise
     rescue Exception => e
       if retries >= 3
-        ErrorReporter.new(e, self).explain("Failed to fetch git repository '#{@source[:git]}'")
-        raise
+        ErrorReporter.new(e, self).explain("Failed to find any commits for the ref '#{ref}'")
+        fail
       else
         # Deal with github failing all the time :(
-        time_to_sleep = 5 * (2 ** retries)
+        time_to_sleep = 5 * (2**retries)
         retries += 1
         log "git ls-remote failed for #{@source} #{retries} time(s), retrying in #{time_to_sleep}s"
         sleep(time_to_sleep)

@@ -1,5 +1,5 @@
 #
-# Copyright:: Copyright (c) 2013 Opscode, Inc.
+# Copyright:: Copyright (c) 2013-2014 Chef Software, Inc.
 # License:: Apache License, Version 2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,28 +22,23 @@ require 'json'
 
 module Omnibus
   module CLI
-
-
     class Release < Base
-
       namespace :release
 
       def initialize(args, options, config)
         super(args, options, config)
       end
 
-      desc "package PATH", "Upload a single package to S3"
-      option :public, :type => :boolean, :default => false, :desc => "Make S3 object publicly readable"
+      desc 'package PATH', 'Upload a single package to S3'
+      option :public, type: :boolean, default: false, desc: 'Make S3 object publicly readable'
       def package(path)
         access_policy = options[:public] ? :public_read : :private
 
-        uploader = PackageRelease.new(path, :access => access_policy) do |uploaded_item|
+        uploader = PackageRelease.new(path, access: access_policy) do |uploaded_item|
           say("Uploaded #{uploaded_item}", :green)
         end
         uploader.release
       end
-
     end
   end
 end
-

@@ -1,5 +1,5 @@
 #
-# Copyright:: Copyright (c) 2012 Opscode, Inc.
+# Copyright:: Copyright (c) 2012-2014 Chef Software, Inc.
 # License:: Apache License, Version 2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,7 +40,6 @@ require 'omnibus/bixby' # load custom bixby patches/addons
 require 'pathname'
 
 module Omnibus
-
   DEFAULT_CONFIG_FILENAME = 'omnibus.rb'.freeze
 
   # Configure Omnibus.
@@ -73,7 +72,7 @@ module Omnibus
   # @param file [String] path to a configuration file to load
   #
   # @return [void]
-  def self.load_configuration(file=nil)
+  def self.load_configuration(file = nil)
     if file
       Config.from_file(file)
     end
@@ -100,7 +99,7 @@ module Omnibus
   #
   # @return [Array<String>]
   def self.project_names
-    projects.map{|p| p.name}
+    projects.map { |p| p.name }
   end
 
   # Load the {Omnibus::Project} instance with the given name.
@@ -108,7 +107,7 @@ module Omnibus
   # @param name [String]
   # @return {Omnibus::Project}
   def self.project(name)
-    projects.find{ |p| p.name == name}
+    projects.find { |p| p.name == name }
   end
 
   # The absolute path to the Omnibus project/repository directory.
@@ -125,7 +124,7 @@ module Omnibus
   #
   # @return [Pathname]
   def self.source_root
-    @source_root ||= Pathname.new(File.expand_path("../..", __FILE__))
+    @source_root ||= Pathname.new(File.expand_path('../..', __FILE__))
   end
 
   # The source root is the path to the root directory of the `omnibus-software`
@@ -134,7 +133,7 @@ module Omnibus
   # @return [Pathname]
   def self.omnibus_software_root
     @omnibus_software_root ||= begin
-      if spec = Gem::Specification.find_all_by_name('omnibus-software').first
+      if (spec = Gem::Specification.find_all_by_name(Config.software_gem).first)
         Pathname.new(spec.gem_dir)
       else
         nil
@@ -156,11 +155,22 @@ module Omnibus
     ruby_files(File.join(project_root, Config.software_dir))
   end
 
+  # Return directories to search for {Omnibus::Software} DSL files.
+  #
+  # @return [Array<String>]
+  def self.software_dirs
+    @software_dirs ||= begin
+      software_dirs = [File.join(project_root, Config.software_dir)]
+      software_dirs << File.join(omnibus_software_root, 'config', 'software') if omnibus_software_root
+      software_dirs
+    end
+  end
+
   # Backward compat alias
   #
   # @todo print a deprecation message
   class << self
-    alias :root :project_root
+    alias_method :root, :project_root
   end
 
   private
@@ -188,7 +198,7 @@ module Omnibus
   # @see Omnibus::Overrides#overrides
   def self.expand_software(overrides, software_map)
     unless overrides.is_a? Hash
-      raise ArgumentError, "Overrides argument must be a hash!  You passed #{overrides.inspect}."
+      fail ArgumentError, "Overrides argument must be a hash!  You passed #{overrides.inspect}."
     end
 
     Omnibus.projects.each do |project|
@@ -207,8 +217,7 @@ module Omnibus
     expand_projects
 
     # Then do software
-    final_software_map = prefer_local_software(omnibus_software_files,
-                                           software_files)
+    final_software_map = prefer_local_software(omnibus_software_files, software_files)
 
     overrides = Config.override_file ? Omnibus::Overrides.overrides : {}
 
@@ -272,7 +281,7 @@ module Omnibus
   # @return [Hash<String, String>]
   def self.software_map(files)
     files.each_with_object({}) do |file, collection|
-      software_name = File.basename(file, ".*")
+      software_name = File.basename(file, '.*')
       collection[software_name] = file
     end
   end
@@ -290,9 +299,7 @@ module Omnibus
     dep_file = software_map[dependency_name]
 
     unless dep_file
-      raise MissingProjectDependency.new(dependency_name,
-                                         [File.join(project_root, Config.software_dir),
-                                          File.join(omnibus_software_root, 'config', 'software')])
+      fail MissingProjectDependency.new(dependency_name, software_dirs)
     end
 
     dep_software = Omnibus::Software.load(dep_file, project, overrides)

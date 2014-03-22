@@ -1,5 +1,5 @@
 #
-# Copyright:: Copyright (c) 2012 Opscode, Inc.
+# Copyright:: Copyright (c) 2012-2014 Chef Software, Inc.
 # License:: Apache License, Version 2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,15 +21,13 @@ require 'omnibus/cli/build'
 
 module Omnibus
   module CLI
-
     class Error < StandardError
       attr_reader :original
 
-      def initialize(msg, original=nil)
+      def initialize(msg, original = nil)
         super(msg)
         @original = original
       end
     end
-
   end
 end

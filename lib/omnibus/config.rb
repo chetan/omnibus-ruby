@@ -1,5 +1,5 @@
 #
-# Copyright:: Copyright (c) 2012 Opscode, Inc.
+# Copyright:: Copyright (c) 2012-2014 Chef Software, Inc.
 # License:: Apache License, Version 2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@ require 'omnibus/exceptions'
 require 'json'
 
 module Omnibus
-
   # Global configuration object for Omnibus runs.
   #
   # @todo Write a {http://yardoc.org/guides/extending-yard/writing-handlers.html
@@ -39,7 +38,7 @@ module Omnibus
     #   Defaults to `"/var/cache/omnibus/cache"`.
     #
     #   @return [String]
-    cache_dir "/var/cache/omnibus/cache"
+    default :cache_dir, '/var/cache/omnibus/cache'
 
     # @!attribute [rw] source_dir
     #   The absolute path to the directory on the virtual machine where
@@ -48,7 +47,7 @@ module Omnibus
     #   Defaults to `"/var/cache/omnibus/src"`.
     #
     #   @return [String]
-    source_dir "/var/cache/omnibus/src"
+    default :source_dir, '/var/cache/omnibus/src'
 
     # @!attribute [rw] build_dir
     #   The absolute path to the directory on the virtual machine where
@@ -57,7 +56,7 @@ module Omnibus
     #   Defaults to `"/var/cache/omnibus/build"`.
     #
     #   @return [String]
-    build_dir "/var/cache/omnibus/build"
+    default :build_dir, '/var/cache/omnibus/build'
 
     # @!attribute [rw] package_dir
     #   The absolute path to the directory on the virtual machine where
@@ -66,7 +65,18 @@ module Omnibus
     #   Defaults to `"/var/cache/omnibus/pkg"`.
     #
     #   @return [String]
-    package_dir "/var/cache/omnibus/pkg"
+    default :package_dir, '/var/cache/omnibus/pkg'
+
+    # @!attribute [rw] package_tmp
+    #   The absolute path to the directory on the virtual machine where
+    #   packagers will store intermediate packaging products. Some packaging
+    #   methods (notably fpm) handle this internally so not all packagers will
+    #   use this setting.
+    #
+    #   Defaults to `"/var/cache/omnibus/pkg-tmp"`.
+    #
+    #   @return [String]
+    default :package_tmp, '/var/cache/omnibus/pkg-tmp'
 
     # @!attribute [rw] project_dir
     #   The relative path of the directory containing {Omnibus::Project}
@@ -75,7 +85,7 @@ module Omnibus
     #   Defaults to `"config/projects"`.
     #
     #   @return [String]
-    project_dir "config/projects"
+    default :project_dir, 'config/projects'
 
     # @!attribute [rw] software_dir
     #   The relative path of the directory containing {Omnibus::Software}
@@ -84,7 +94,7 @@ module Omnibus
     #   Defaults to `"config/software"`.
     #
     #   @return [String]
-    software_dir "config/software"
+    default :software_dir, 'config/software'
 
     # @!attribute [rw] project_root
     #   The root directory in which to look for {Omnibus::Project} and
@@ -93,7 +103,7 @@ module Omnibus
     #   Defaults to the current working directory.
     #
     #   @return [String]
-    project_root Dir.pwd
+    default :project_root, Dir.pwd
 
     # @!attribute [rw] install_dir
     #   Installation directory
@@ -104,7 +114,7 @@ module Omnibus
     #     {Omnibus::Project#install_path}
     #
     #   @return [String]
-    install_dir "/opt/chef"
+    default :install_dir, '/opt/chef'
 
     # @!endgroup
 
@@ -118,7 +128,7 @@ module Omnibus
     #   Defaults to `false`.
     #
     #   @return [Boolean]
-    use_s3_caching false
+    default :use_s3_caching, false
 
     # @!attribute [rw] s3_bucket
     #   The name of the S3 bucket you want to cache software artifacts in.
@@ -126,7 +136,7 @@ module Omnibus
     #   Defaults to `nil`.  Must be set if {#use_s3_caching} is `true`.
     #
     #   @return [String, nil]
-    s3_bucket nil
+    default :s3_bucket, nil
 
     # @!attribute [rw] s3_access_key
     #   The S3 access key to use with S3 caching.
@@ -134,7 +144,7 @@ module Omnibus
     #   Defaults to `nil`.  Must be set if {#use_s3_caching} is `true`.
     #
     #   @return [String, nil]
-    s3_access_key nil
+    default :s3_access_key, nil
 
     # @!attribute [rw] s3_secret_key
     #   The S3 secret key to use with S3 caching.
@@ -142,7 +152,7 @@ module Omnibus
     #   Defaults to `nil`.  Must be set if {#use_s3_caching} is `true.`
     #
     #   @return [String, nil]
-    s3_secret_key nil
+    default :s3_secret_key, nil
 
     # @!endgroup
 
@@ -154,7 +164,7 @@ module Omnibus
     #   Defaults to `nil`.  Must be set to use `release package` command.
     #
     #   @return [String, nil]
-    release_s3_bucket nil
+    default :release_s3_bucket, nil
 
     # @!attribute [rw] release_s3_access_key
     #   The S3 access key to use for S3 artifact release.
@@ -162,7 +172,7 @@ module Omnibus
     #   Defaults to `nil`.  Must be set to use `release package` command.
     #
     #   @return [String, nil]
-    release_s3_access_key nil
+    default :release_s3_access_key, nil
 
     # @!attribute [rw] release_s3_secret_key
     #   The S3 secret key to use for S3 artifact release
@@ -170,7 +180,7 @@ module Omnibus
     #   Defaults to `nil`.  Must be set to use `release package` command.
     #
     #   @return [String, nil]
-    release_s3_secret_key nil
+    default :release_s3_secret_key, nil
 
     # @!endgroup
 
@@ -179,12 +189,23 @@ module Omnibus
     # @!attribute [rw] override_file
     #
     #   @return [Boolean]
-    override_file nil
+    default :override_file, nil
+
+    # @!attribute [rw] software_gem
+    #
+    #   The gem to pull software definitions from.  This is just the name of the gem, which is used
+    #   to find the path to your software definitions, and you must also specify this gem in the
+    #   Gemfile of your project repo in order to include the gem in your bundle.
+    #
+    #   Defaults to "omnibus-software".
+    #
+    #   @return [String, nil]
+    default :software_gem, 'omnibus-software'
 
     # @!attribute [rw] solaris_compiler
     #
     #   @return [String, nil]
-    solaris_compiler nil
+    default :solaris_compiler, nil
 
     # @!endgroup
 
@@ -193,9 +214,16 @@ module Omnibus
     # @!attribute [rw] append_timestamp
     #
     #   @return [Boolean]
-    append_timestamp true
+    default :append_timestamp, true
 
     # # @!endgroup
+
+    # @!group Build Control Parameters
+
+    # @! attribute [rw] build_retries
+    #
+    #   @return [Integer, nil]
+    default :build_retries, 3
 
     # @!group Validation Methods
 
@@ -213,12 +241,11 @@ module Omnibus
     def self.valid_s3_config?
       if use_s3_caching
         unless s3_bucket
-          raise InvalidS3Configuration.new(s3_bucket, s3_access_key, s3_secret_key)
+          fail InvalidS3Configuration.new(s3_bucket, s3_access_key, s3_secret_key)
         end
       end
     end
 
     # @!endgroup
-
   end # Config
 end # Omnibus

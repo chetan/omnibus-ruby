@@ -1,5 +1,4 @@
 module Omnibus
-
   class InvalidS3Configuration < RuntimeError
     def initialize(s3_bucket, s3_access_key, s3_secret_key)
       @s3_bucket, @s3_access_key, @s3_secret_key = s3_bucket, s3_access_key, s3_secret_key
@@ -91,6 +90,7 @@ module Omnibus
       """
     end
   end
+
   # Raise this error if a needed Project configuration value has not
   # been set.
   class MissingProjectConfiguration < RuntimeError
@@ -104,6 +104,26 @@ module Omnibus
       a value for '#{@parameter_name}'!
 
       Please add code similar to the following to your project DSL file:
+
+         #{@parameter_name} '#{@sample_value}'
+
+      """
+    end
+  end
+
+  # Raise this error if a needed Software configuration value has not
+  # been set.
+  class MissingSoftwareConfiguration < RuntimeError
+    def initialize(software_name, parameter_name, sample_value)
+      @software_name, @parameter_name, @sample_value = software, parameter_name, sample_value
+    end
+
+    def to_s
+      """
+      You are attempting to build software #{@sofware_name}, but have not specified
+      a value for '#{@parameter_name}'!
+
+      Please add code similar to the following to your software DSL file:
 
          #{@parameter_name} '#{@sample_value}'
 
@@ -126,6 +146,21 @@ module Omnibus
     end
   end
 
+  class MissingTemplate < RuntimeError
+    def initialize(template_name, search_paths)
+      @template_name, @search_paths = template_name, search_paths
+    end
+
+    def to_s
+      """
+      Attempting to evaluate the template #{@template_name}, but it was not
+      found at any of the following locations:
+
+      #{@search_paths.join("\n      ")}
+      """
+    end
+  end
+
   class MissingProjectDependency < RuntimeError
     def initialize(dep_name, search_paths)
       @dep_name, @search_paths = dep_name, search_paths
@@ -139,5 +174,22 @@ module Omnibus
       #{@search_paths.join("\n      ")}
       """
     end
+  end
+
+  class MissingMacPkgResource < StandardError
+    def initialize(missing_file_paths)
+      @missing_file_paths = missing_file_paths
+    end
+
+    def to_s
+      <<-E
+      Your omnibus repo is missing the following files required to build Mac
+      packages:
+      #{@missing_file_paths.map { |p| "* #{p}" }.join("\n      ")}
+E
+    end
+  end
+
+  class UnresolvableGitReference < RuntimeError
   end
 end
