@@ -157,7 +157,7 @@ module Omnibus
     # load extra list of software
     gem_list = File.join(project_root, "software_gems")
     if File.exists? gem_list then
-      File.read(gem_list).each_line |lib|
+      File.read(gem_list).each_line do |lib|
         begin
           spec = Gem::Specification.find_all_by_name(lib).first
           path = File.join(Pathname.new(spec.gem_dir), 'config', 'software')
